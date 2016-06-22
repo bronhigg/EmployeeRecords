@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace EmployeeRecords
 {
@@ -16,6 +17,7 @@ namespace EmployeeRecords
         public mainForm()
         {
             InitializeComponent();
+            loadDB();
         }
 
         private void addButton_Click(object sender, EventArgs e)
@@ -26,7 +28,7 @@ namespace EmployeeRecords
             string newStartDate = dateInput.Text;
             string newSalary = salaryInput.Text;
 
-            Employee newEmployee = new Employee(newID, newFirstName, newLastName, newSalary, newSalary);
+            Employee newEmployee = new Employee(newID, newFirstName, newLastName, newSalary, newStartDate);
             employeeDB.Add(newEmployee);
 
             ClearLabels();
@@ -76,6 +78,83 @@ namespace EmployeeRecords
             lnInput.Text = "";
             dateInput.Text = "";
             salaryInput.Text = "";
+        }
+
+        private void mainForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            XmlTextWriter writer = new XmlTextWriter("outputExample.xml", null);
+
+            //Write the "Class" element
+            writer.WriteStartElement("Class");
+
+            for (int i = 0; i < employeeDB.Count(); i++)
+            {
+                //Start "student" element
+                writer.WriteStartElement("student");
+
+                //Write sub-elements
+                writer.WriteElementString("id", employeeDB[i].id);
+                writer.WriteElementString("firstName", employeeDB[i].firstName);
+                writer.WriteElementString("lastName", employeeDB[i].lastName);
+                writer.WriteElementString("date", employeeDB[i].date);
+                writer.WriteElementString("salary", employeeDB[i].salary);
+
+                // end the "student" element
+                writer.WriteEndElement();
+            }
+
+            writer.Close();
+        }
+
+        public void loadDB()
+        {
+            string newID, newFirstName, newLastName, newStartDate, newSalary;
+            newID = newFirstName = newLastName = newStartDate = newSalary = "";
+            int index = 1;
+
+            XmlTextReader reader = new XmlTextReader("outputExample.xml");
+
+            // Continue to read each element and text until the file is done
+            while (reader.Read())
+            {
+                // If the currently read item is text then print it to screen,
+                // otherwise the loop repeats getting the next piece of information
+
+
+                if (reader.NodeType == XmlNodeType.Text)
+                {
+                    if (index == 1)
+                    {
+                        newID = reader.Value;
+                        index++;
+                    }
+                    else if (index == 2)
+                    {
+                        newFirstName = reader.Value;
+                        index++;
+                    }
+                    else if (index == 3)
+                    {
+                        newLastName = reader.Value;
+                        index++;
+                    }
+                    else if (index == 4)
+                    {
+                        newStartDate = reader.Value;
+                        index++;
+                    }
+                    else if (index == 5)
+                    {
+                        newSalary = reader.Value;
+
+                        Employee newEmployee = new Employee(newID, newFirstName, newLastName, newStartDate, newSalary);
+                        employeeDB.Add(newEmployee);
+
+                        index = 1;
+                    }
+                }
+
+            }
         }
     }
 }
